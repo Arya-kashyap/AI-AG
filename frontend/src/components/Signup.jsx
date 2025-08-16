@@ -27,7 +27,7 @@ function Signup() {
           setLoading(true);
           setError('');
           try {
-               const {data} = await axios.post('/api/signup', {
+               const {data} = await axios.post('/api/users/signup', {
                     firstName: formData.firstName,
                     lastName: formData.lastName,
                     email: formData.email,
@@ -94,7 +94,7 @@ function Signup() {
 
                     <p className='text-xs text-gray-400 my-3 text-center'>By signing up or logging in, you consent to Chatbot AI's <a href="" className='underline'>Terms of Use</a> and <a href="" className='underline'>Privacy Policy</a></p>
 
-                    <button onClick={handleSignup} className='w-full bg-indigo-600 hover:bg-indigo-500 py-2 rounded-lg font-semibold transition my-3'>Sign Up</button>
+                    <button disabled={loading} onClick={handleSignup} className='w-full bg-indigo-600 hover:bg-indigo-500 py-2 rounded-lg font-semibold transition my-3'>{loading ? "Signing..." : "Signup"}</button>
 
                     <div className='flex justify-between px-2 text-sm mt-1'>
                          <p>Already have an account?</p>

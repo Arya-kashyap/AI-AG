@@ -1,16 +1,66 @@
 import { ArrowUp, Bot, Globe, Paperclip } from 'lucide-react'
-import React, {useState} from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import webLogo from '../../public/webLogo.jpg'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
+import {tomorrow as codeTheme} from 'react-syntax-highlighter/dist/esm/styles/prism'
+import '../App.css'
 
 function Hero() {
   const [inputValue, setInputValue] = useState("")
   const [typeMessage, setTypeMessage] = useState("")
+  const [prompt, setPrompt] = useState([])
+  const [loading, setLoading] = useState(false)
+  const promptEndRef = useRef()
 
-  const handleSend = () => {
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const storedPrompt = localStorage.getItem(`promptHistory_${user._id}`);
+    if (storedPrompt) {
+      setPrompt(JSON.parse(storedPrompt));
+    }
+  }, []);
+  
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    localStorage.setItem(`promptHistory_${user._id}`, JSON.stringify(prompt));
+  },[prompt]);
+
+  useEffect(()=>{
+    promptEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  },[prompt, loading])
+
+  const handleSend = async () => {
     const trimmed = inputValue.trim();
-    if(!trimmed) return;
+    if (!trimmed) return;
     setTypeMessage(trimmed);
     setInputValue("");
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const { data } = await axios.post('/api/prompts/promt',
+        { contet: trimmed },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          withCredentials: true
+        }
+      );
+      setPrompt((prev) => [...prev, 
+        {role: 'user', content: trimmed},
+        {role: 'assistant', content: data.reply}
+      ]);
+    } catch (error) {
+      setPrompt((prev) => [...prev,
+        {role: 'user', content: trimmed},
+        {role: 'assistant', content: "Sorry, I couldn't process your request. Please try again later."}
+      ]);
+    } finally {
+      setLoading(false);
+      setTypeMessage(null);
+    }
   }
 
   const handleKeyDown = (e) => {
@@ -30,14 +80,68 @@ function Hero() {
       </div>
 
       {/* Chat Interface */}
-      <div className='w-full max-w-4xl flex-1 overflow-y-auto m-5 space-y-4 max-h-[60vh] px-1'>
-        {typeMessage && (
-          <div className='w-full flex justify-end'>
-            <div className='bg-blue-500 text-white self-end px-4 py-2 rounded-lg shadow-md max-w-[75%]'>
-              {typeMessage}
+      <div className="w-full max-w-4xl flex-1 overflow-y-scroll h-64 dark-scrollbar mt-6 mb-4 space-y-4 max-h-[55vh] px-1">
+        {prompt.map((msg, index) => (
+          <div
+            key={index}
+            className={`w-full flex ${
+              msg.role === "user" ? "justify-end" : "justify-start"
+            }`}
+          >
+            {msg.role === "assistant" ? (
+              // 🧠 Full-width assistant response
+              <div className="w-full bg-[#232323] text-white rounded-xl px-4 py-3 text-sm whitespace-pre-wrap">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    code({ node, inline, className, children, ...props }) {
+                      const match = /language-(\w+)/.exec(className || "");
+                      return !inline && match ? (
+                        <SyntaxHighlighter
+                          style={codeTheme}
+                          language={match[1]}
+                          PreTag="div"
+                          className="rounded-lg mt-2"
+                          {...props}
+                        >
+                          {String(children).replace(/\n$/, "")}
+                        </SyntaxHighlighter>
+                      ) : (
+                        <code
+                          className="bg-gray-800 px-1 py-0.5 rounded"
+                          {...props}
+                        >
+                          {children}
+                        </code>
+                      );
+                    },
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              // 👤 User message - 30% width at top-right
+              <div className="w-[30%] bg-blue-600 text-white rounded-xl px-4 py-3 text-sm whitespace-pre-wrap self-start">
+                {msg.content}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {loading && typeMessage && (
+          <div className="whitespace-pre-wrap px-4 py-3 rounded-2xl text-sm break-words
+           bg-blue-600 text-white self-end ml-auto max-w-[40%]">{typeMessage}</div>
+        )}
+
+        {loading && (
+          <div className="flex justify-start w-full">
+            <div className="bg-[#2f2f2f] text-white px-4 py-3 rounded-xl text-sm animate-pulse">
+              🤖Loading...
             </div>
           </div>
         )}
+        <div ref={promptEndRef}></div>
       </div>
 
       {/* Input Box */}

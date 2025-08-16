@@ -64,7 +64,12 @@ export const login =async (req, res) => {
           };
           res.cookie('token', token, cookieOptions);
           return res.status(200).json({
-               message: "Login successful", token
+               message: "Login successful", token , user: {
+                    _id: findUser._id,
+                    firstName: findUser.firstName,
+                    lastName: findUser.lastName,
+                    email: findUser.email
+               }
           });
      } catch (error) {
           res.status(500).json({errors: "Server error"});
