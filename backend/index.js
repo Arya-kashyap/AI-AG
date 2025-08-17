@@ -31,6 +31,9 @@ mongoose.connect(MONGO_URI)
      });
 
 // Routes
+app.use('/', (req, res) => {
+     res.send('Welcome to the AI AG Backend API');
+});
 app.use('/api/users', userRoute);
 app.use('/api/prompts', promptRoute);
 
