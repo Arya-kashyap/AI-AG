@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '../context/AuthProvider';
@@ -23,11 +23,11 @@ function Login() {
           });
      }
 
-     const handleSignup =async () => {
+     const handleSignup = async () => {
           setLoading(true);
           setError('');
           try {
-               const {data} = await axios.post('/api/users/login', {
+               const { data } = await axios.post('/api/users/login', {
                     email: formData.email,
                     password: formData.password
                }, {
@@ -36,8 +36,7 @@ function Login() {
                          'Content-Type': 'application/json'
                     }
                })
-               console.log('Login Response:', data);
-               
+
                alert(data.message || 'Login successful!');
                localStorage.setItem('user', JSON.stringify(data.user));
                localStorage.setItem('token', data.token);

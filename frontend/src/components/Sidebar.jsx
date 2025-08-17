@@ -1,18 +1,18 @@
 import React from 'react'
-import { LogOut, X } from 'lucide-react'
+import { LogOut, PanelRightOpen, X } from 'lucide-react'
 import userImg from '../../public/userImg.webp'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '../context/AuthProvider'
 
-function Sidebar() {
-     const navigate = useNavigate();
-     const [,setAuthUser] = useAuth();
-     const user = JSON.parse(localStorage.getItem('user'));
-     console.log(user);
+function Sidebar({ setShowSideBar }) {
 
-     const handleLogout =async() => {
-          const {data} = await axios.post('/api/users/logout', {
+     const navigate = useNavigate();
+     const [, setAuthUser] = useAuth();
+     const user = JSON.parse(localStorage.getItem('user'));
+
+     const handleLogout = async () => {
+          const { data } = await axios.post('/api/users/logout', {
                withCredentials: true,
           });
           localStorage.removeItem('user');
@@ -21,13 +21,13 @@ function Sidebar() {
           setAuthUser(null);
           navigate('/login');
      }
-     
+
      return (
           <div className='h-full flex flex-col'>
                {/* Header */}
                <div className='flex items-center justify-between p-4 border-b border-gray-700'>
                     <div className='text-xl font-bold'>Chatbot AI</div>
-                    <button><X className='text-gray-300 w-6 h-6' /></button>
+                    <button onClick={() => setShowSideBar(false)}><PanelRightOpen className='text-gray-300 w-6 h-6' /></button>
                </div>
 
                {/* History */}

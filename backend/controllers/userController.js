@@ -2,59 +2,60 @@ import User from "../models/userModel.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+
 dotenv.config();
 
-export const signup =async (req, res) => {
-     const {firstName, lastName, email, password} = req.body;
+export const signup = async (req, res) => {
+     const { firstName, lastName, email, password } = req.body;
      try {
           if (!firstName || !lastName || !email || !password) {
-               return res.status(400).json({errors: "All fields are required"});
+               return res.status(400).json({ errors: "All fields are required" });
           }
-          const exitingUser = await User.findOne({email:email});
+          const exitingUser = await User.findOne({ email: email });
           if (exitingUser) {
-               return res.status(400).json({errors: "User already exists"});
+               return res.status(400).json({ errors: "User already exists" });
           }
           const hashedPassword = await bcrypt.hash(password, 10);
           if (!hashedPassword) {
-               return res.status(500).json({errors: "Error hashing password"});
+               return res.status(500).json({ errors: "Error hashing password" });
           }
           const newUser = new User({
-               firstName, 
-               lastName, 
-               email, 
+               firstName,
+               lastName,
+               email,
                password: hashedPassword
           });
           await newUser.save();
-          return res.status(201).json({message: "User created successfully", newUser});
+          return res.status(201).json({ message: "User created successfully", newUser });
      } catch (error) {
-          res.status(500).json({errors: "Server error"});
+          res.status(500).json({ errors: "Server error" });
           console.error("Error during signup:", error);
      }
-     
+
 }
 
-export const login =async (req, res) => {
-     const {email, password} = req.body;
+export const login = async (req, res) => {
+     const { email, password } = req.body;
      try {
           if (!email || !password) {
-               return res.status(400).json({errors: "Email and password are required"});
+               return res.status(400).json({ errors: "Email and password are required" });
           }
-          const findUser = await User.findOne({email:email});
+          const findUser = await User.findOne({ email: email });
           if (!findUser) {
-               return res.status(400).json({errors: "User not found"});
+               return res.status(400).json({ errors: "User not found" });
           }
           const isPasswordValid = await bcrypt.compare(password, findUser.password);
           if (!isPasswordValid) {
-               return res.status(400).json({errors: "Invalid password"});
+               return res.status(400).json({ errors: "Invalid password" });
           }
           // Generate JWT token
           if (!process.env.JWT_SECRET) {
-               return res.status(500).json({errors: "JWT secret is not defined"});
+               return res.status(500).json({ errors: "JWT secret is not defined" });
           }
           const token = jwt.sign(
-               {userId: findUser._id},
+               { userId: findUser._id },
                process.env.JWT_SECRET,
-               {expiresIn: '1d'}
+               { expiresIn: '1d' }
           );
           const cookieOptions = {
                expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
@@ -64,7 +65,7 @@ export const login =async (req, res) => {
           };
           res.cookie('token', token, cookieOptions);
           return res.status(200).json({
-               message: "Login successful", token , user: {
+               message: "Login successful", token, user: {
                     _id: findUser._id,
                     firstName: findUser.firstName,
                     lastName: findUser.lastName,
@@ -72,7 +73,7 @@ export const login =async (req, res) => {
                }
           });
      } catch (error) {
-          res.status(500).json({errors: "Server error"});
+          res.status(500).json({ errors: "Server error" });
           console.error("Error during login:", error);
      }
 }
@@ -80,9 +81,9 @@ export const login =async (req, res) => {
 export const logout = (req, res) => {
      try {
           res.clearCookie('token');
-          return res.status(200).json({message: "Logout successful"});
+          return res.status(200).json({ message: "Logout successful" });
      } catch (error) {
-          res.status(500).json({errors: "Server error"});
+          res.status(500).json({ errors: "Server error" });
           console.error("Error during logout:", error);
      }
 }

@@ -1,18 +1,20 @@
-import React, {useState} from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 function Signup() {
+
+     const [error, setError] = useState('');
+     const [loading, setLoading] = useState(false);
+     const navigate = useNavigate();
+
+     // State to hold form data
      const [formData, setFormData] = useState({
           firstName: '',
           lastName: '',
           email: '',
           password: ''
      });
-
-     const [error, setError] = useState('');
-     const [loading, setLoading] = useState(false);
-     const navigate = useNavigate();
 
      const handleChange = (e) => {
           const value = e.target.value;
@@ -23,11 +25,11 @@ function Signup() {
           });
      }
 
-     const handleSignup =async () => {
+     const handleSignup = async () => {
           setLoading(true);
           setError('');
           try {
-               const {data} = await axios.post('/api/users/signup', {
+               const { data } = await axios.post('/api/users/signup', {
                     firstName: formData.firstName,
                     lastName: formData.lastName,
                     email: formData.email,
